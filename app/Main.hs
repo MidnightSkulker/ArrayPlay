@@ -1,4 +1,5 @@
 {-# LANGUAGE DuplicateRecordFields, FlexibleInstances, UndecidableInstances #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Main where
 
@@ -47,7 +48,8 @@ data BirthDeathYears =
                     deathYear :: Int} deriving (Eq, Ord, Show)
 -- A year and either a +1 or a -1 although
 -- (the data structure will handle any Int => Int function)
-type Incr = (Int, Int -> Int)
+type Bump = Int -> Int
+type Incr = (Int, Bump)
 plus1 :: Int -> Int
 plus1 = (+1)
 minus1 :: Int -> Int
@@ -67,14 +69,23 @@ type Population = [ BirthDeathYears ]
 -- An array with the number of births and deaths in each year
 type Histogram = Array BirthDeathCounts
 
+histogram :: [BirthDeathYears] -> Array Int Int
+histogram bdyears =
+  let minBirthYear :: Int = foldr min 0 (map birthYear bdyears)
+      maxDeathYear :: Int = foldr max 0 (map deathYear bdyears)
+      -- array :: Ix i => (i, i) -> [(i, e)] -> Array i e
+      -- concatMap :: Foldable t => (a -> [b]) -> t a -> [b]
+      incrs :: [Incr] = concatMap yearsToIncrs bdyears
+      addIncrToArray :: Int -> Bump -> Int
+      addIncrToArray n bump = bump n
+      -- accumArray :: Ix i => (e -> a -> e) -> e -> (i, i) -> [(i, a)] -> Array i e
+      histogram :: Array Int Int =
+        accumArray addIncrToArray 0 (minBirthYear, maxDeathYear) incrs
+  in histogram
+
 -- Determine min and max years
 -- This might not be necessary if we used a Map to store the birth / death counts
 -- We will try that later.
-minMaxYears :: [BirthDeathYears] -> (Int, Int)
-minMaxYears bdyears =
-  let minBirthYear = foldr min 0 (map birthYear bdyears)
-      maxDeathYear = foldr max 0 (map deathYear bdyears)
-  in (minBirthYear, maxDeathYear)
 
 -- Convert birth and death years into an array of birth and death counts
 birthDeathCounts :: BirthDeathYears -> Array Int Int
