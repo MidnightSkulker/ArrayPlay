@@ -7,8 +7,8 @@ import Data.Array
 import Data.Bits
 import Data.List
 -- import Data.List.Split
-import Data.Set
-import Data.Text
+-- import Data.Set
+-- import Data.Text
 import Debug.Trace
 import System.Environment
 import System.IO
@@ -45,7 +45,21 @@ stringAnagram dictionary query =
 data BirthDeathYears =
   BirthDeathYears { birthYear :: Int,
                     deathYear :: Int} deriving (Eq, Ord, Show)
+-- A year and either a +1 or a -1 although
+-- (the data structure will handle any Int => Int function)
+type Incr = (Int, Int -> Int)
+type BirthDeathIncr = (Incr, Incr)
+plus1 :: Int -> Int
+plus1 = (+1)
+minus1 :: Int -> Int
+minus1 x = x - 1
+
+-- Convert BirthDeathYears to BirthDeathInc
+-- (1976, 2012) becomes ((1976, \x -> x + 1), (2012, \x -> x - 1))
 -- A tuple of birth and death counts for a given year.
+yearsToIncrs :: BirthDeathYears -> BirthDeathIncr
+yearsToIncrs BirthDeathYears { birthYear = b, deathYear = d } = ((b, plus1), (d, minus1))
+
 data BirthDeathCounts =
   BirthDeathCounts { birthCount :: Int,
                      deathCount :: Int } deriving (Eq, Ord, Show)
@@ -54,8 +68,17 @@ type Population = [ BirthDeathYears ]
 -- An array with the number of births and deaths in each year
 type Histogram = Array BirthDeathCounts
 
+-- Determine min and max years
+-- This might not be necessary if we used a Map to store the birth / death counts
+-- We will try that later.
+minMaxYears :: [BirthDeathYears] -> (Int, Int)
+minMaxYears bdyears =
+  let minBirthYear = foldr min 0 (map birthYear bdyears)
+      maxDeathYear = foldr max 0 (map deathYear bdyears)
+  in (minBirthYear, maxDeathYear)
+
 -- Convert birth and death years into an array of birth and death counts
-birthDeathCounts :: BirthDeathYears -> BirthDeathCounts
+birthDeathCounts :: BirthDeathYears -> Array Int Int
 birthDeathCounts bdyears =
   undefined
 
