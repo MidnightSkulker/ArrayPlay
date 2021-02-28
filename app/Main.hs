@@ -48,17 +48,16 @@ data BirthDeathYears =
 -- A year and either a +1 or a -1 although
 -- (the data structure will handle any Int => Int function)
 type Incr = (Int, Int -> Int)
-type BirthDeathIncr = (Incr, Incr)
 plus1 :: Int -> Int
 plus1 = (+1)
 minus1 :: Int -> Int
 minus1 x = x - 1
 
 -- Convert BirthDeathYears to BirthDeathInc
--- (1976, 2012) becomes ((1976, \x -> x + 1), (2012, \x -> x - 1))
+-- (1976, 2012) becomes [(1976, \x -> x + 1), (2012, \x -> x - 1)]
 -- A tuple of birth and death counts for a given year.
-yearsToIncrs :: BirthDeathYears -> BirthDeathIncr
-yearsToIncrs BirthDeathYears { birthYear = b, deathYear = d } = ((b, plus1), (d, minus1))
+yearsToIncrs :: BirthDeathYears -> [Incr]
+yearsToIncrs BirthDeathYears { birthYear = b, deathYear = d } = [(b, plus1), (d, minus1)]
 
 data BirthDeathCounts =
   BirthDeathCounts { birthCount :: Int,
