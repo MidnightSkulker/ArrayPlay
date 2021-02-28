@@ -68,6 +68,3 @@ birthDeathCounts bdyears =
 main :: IO ()
 main = do
     putStrLn "Hello"
-
-
-
