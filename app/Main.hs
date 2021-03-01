@@ -63,34 +63,16 @@ histogram bdyears =
       -- array :: Ix i => (i, i) -> [(i, e)] -> Array i e
       zeroArray = array (firstYear, lastYear) [(i,0) | i <- years]
       accumBump :: Incr -> Array Int Int -> Array Int Int
-      accumBump (year, bump) hist =
-        let currentPop = hist!year
-        in hist // [(year, bump currentPop)]
+      accumBump (year, bump) hist = hist // [(year, bump (hist!year))]
       -- foldr :: Foldable t => (a -> b -> b) -> b -> t a -> b
       -- foldl :: (b -> a -> b) -> b -> t a -> b
       -- Get the array of bumps
       bumpArray = foldr accumBump zeroArray incrs
       -- Now sum the bumps
-      -- This version does not work, you cannot fold an array
-      sumBump :: Int -> Array Int Int -> Array Int Int
-      sumBump year hist | year == firstYear = hist
-      sumBump year hist = hist // [(year, hist!(year-1) + hist!year)]
       sumBumpL :: Array Int Int -> Int -> Array Int Int
       sumBumpL hist year | year == firstYear = hist
       sumBumpL hist year = hist // [(year, hist!(year-1) + hist!year)]
-      populationArray = foldr sumBump bumpArray years
       populationArrayL = foldl sumBumpL bumpArray years
-      -- Now version 2 of sum the bumps
-      sumBump2 :: (Int, Int) -> Array Int Int -> Array Int Int
-      sumBump2 (firstYear, lastYear) a = sumBump3 [firstYear .. lastYear] a
-      sumBump3 :: [Int] -> Array Int Int -> Array Int Int
-      sumBump3 [] a = a
-      sumBump3 [n] a | n == firstYear = a
-      sumBump3 [n] a | n > firstYear = a // [(n, a!(n-1) + a!n)]
-      sumBump3 (n:ns) a | n == firstYear = sumBump3 ns a
-      sumBump3 (n:ns) a | n > firstYear = sumBump3 ns (a // [(n, a!(n-1) + a!n)])
-      -- accumArray addIncrToArray 0 (firstYear, lastYear) incrs (Old version)
-      populationArray2 = sumBump2 (firstYear, lastYear) bumpArray
   in populationArrayL
 
 -- Determine min and max year
