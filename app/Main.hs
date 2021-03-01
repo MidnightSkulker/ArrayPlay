@@ -42,19 +42,22 @@ type Population = [ BirthDeathYears ]
 -- An array with the number of births and deaths in each year
 type Histogram = Array BirthDeathCounts
 
+minBirthYear :: [BirthDeathYears] -> Int
+minBirthYear bdyears = foldr min (maxBound :: Int) (map birthYear bdyears)
+
+maxDeathYear :: [BirthDeathYears] -> Int
+maxDeathYear bdyears = foldr max 0 (map deathYear bdyears)
+
 histogram :: [BirthDeathYears] -> Array Int Int
 histogram bdyears =
-  let minBirthYear :: Int = foldr min 0 (map birthYear bdyears)
-      maxDeathYear :: Int = foldr max 0 (map deathYear bdyears)
-      -- array :: Ix i => (i, i) -> [(i, e)] -> Array i e
-      -- concatMap :: Foldable t => (a -> [b]) -> t a -> [b]
-      incrs :: [Incr] = concatMap yearsToIncrs bdyears
+  let incrs :: [Incr] = concatMap yearsToIncrs bdyears
       addIncrToArray :: Int -> Bump -> Int
       addIncrToArray n bump = bump n
       -- accumArray :: Ix i => (e -> a -> e) -> e -> (i, i) -> [(i, a)] -> Array i e
-      histogram :: Array Int Int =
-        accumArray addIncrToArray 0 (minBirthYear, maxDeathYear) incrs
-  in histogram
+  in accumArray addIncrToArray 0 (minBirthYear bdyears, maxDeathYear bdyears) incrs
+
+-- array :: Ix i => (i, i) -> [(i, e)] -> Array i e
+-- concatMap :: Foldable t => (a -> [b]) -> t a -> [b]
 
 -- Determine min and max years
 -- This might not be necessary if we used a Map to store the birth / death counts
@@ -78,4 +81,8 @@ test1 :: [BirthDeathYears] = [person1, person2, person3, person4 ]
 
 main :: IO ()
 main = do
-    putStrLn "Hello"
+    putStrLn $ "minBirthYear test1 = " ++ show (minBirthYear test1)
+    putStrLn $ "maxDeathYear test1 = " ++ show (maxDeathYear test1)
+    putStrLn $ "histogram test1 = " ++ show (histogram test1)
+
+m :: IO () = main
