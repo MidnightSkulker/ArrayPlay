@@ -59,17 +59,22 @@ histogram bdyears =
 -- Determine min and max years
 -- This might not be necessary if we used a Map to store the birth / death counts
 -- We will try that later.
-maximum' :: Int -> Int -> Int -> Int -> Array Int Int -> Int
-maximum' low high current max hist | current >= high = max
-maximum' low high current max hist | hist!current > max =
-  maximum' low high (current + 1) (hist!current) hist
-maximum' low high current max hist = maximum' low high (current + 1) max hist
+maximum' :: (Int, Int) -> Int -> Int -> Array Int Int -> Int
+maximum' (low, high) current max hist | current >= high = max
+maximum' (low, high) current max hist | hist!current > max =
+  maximum' (low, high) (current + 1) (hist!current) hist
+maximum' (low, high) current max hist = maximum' (low, high) (current + 1) max hist
 
 -- Get the one of the maximum values from the histogram
 maximum :: Array Int Int -> Int
-maximum hist =
-  let (fst, lst) = bounds hist
-  in maximum' fst lst fst 0 hist
+maximum hist = maximum' (bounds hist) (fst (bounds hist)) 0 hist
+
+person1 :: BirthDeathYears = BirthDeathYears { birthYear = 1976, deathYear = 2012 }
+person2 :: BirthDeathYears = BirthDeathYears { birthYear = 1977, deathYear = 2011 }
+person3 :: BirthDeathYears = BirthDeathYears { birthYear = 1978, deathYear = 2014 }
+person4 :: BirthDeathYears = BirthDeathYears { birthYear = 1979, deathYear = 1980 }
+
+test1 :: [BirthDeathYears] = [person1, person2, person3, person4 ]
 
 main :: IO ()
 main = do
