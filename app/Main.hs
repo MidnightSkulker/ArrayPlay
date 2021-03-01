@@ -52,14 +52,52 @@ histogram :: [BirthDeathYears] -> Array Int Int
 histogram bdyears =
   let incrs :: [Incr] = concatMap yearsToIncrs bdyears
       addIncrToArray :: Int -> Bump -> Int
-      addIncrToArray n bump = bump n
+      addIncrToArray previous bump = bump previous
+      -- a will be (previous Population, year, bump)
+      -- e will be population
       -- accumArray :: Ix i => (e -> a -> e) -> e -> (i, i) -> [(i, a)] -> Array i e
-  in accumArray addIncrToArray 0 (minBirthYear bdyears, maxDeathYear bdyears) incrs
+      firstYear = minBirthYear bdyears
+      lastYear = maxDeathYear bdyears
+      years = [firstYear .. lastYear]
+      -- Initial Array, all populations are zero.
+      -- array :: Ix i => (i, i) -> [(i, e)] -> Array i e
+      zeroArray = array (firstYear, lastYear) [(i,0) | i <- years]
+      accumBump :: Incr -> Array Int Int -> Array Int Int
+      accumBump (year, bump) hist =
+        let currentPop = hist!year
+        in hist // [(year, bump currentPop)]
+      -- foldr :: Foldable t => (a -> b -> b) -> b -> t a -> b
+      -- Get the array of bumps
+      bumpArray = foldr accumBump zeroArray incrs
+      -- Now sum the bumps
+      sumBump :: Int -> Array Int Int -> Array Int Int
+      sumBump year hist | year == firstYear = hist
+      sumBump year hist =
+        let previousPop = hist!(year - 1)
+            bumpBy = hist!year
+        in hist // [(year, previousPop + bumpBy)]
+      -- populationArray = foldr sumBump bumpArray years
+      sumBump2 :: (Int, Int) -> Array Int Int -> Array Int Int
+      sumBump2 (firstYear, lastYear) a = sumBump3 [firstYear .. lastYear] a
+      sumBump3 :: [Int] -> Array Int Int -> Array Int Int
+      sumBump3 [] a = a
+      sumBump3 [n] a | n == firstYear = a
+      sumBump3 [n] a | n > firstYear =
+        let previousPop = a!(n-1)
+            bumpBy = a!n
+        in a // [(n, previousPop + bumpBy)]
+      sumBump3 (n:ns) a | n == firstYear = sumBump3 ns a
+      sumBump3 (n:ns) a | n > firstYear =
+        let previousPop = a!(n-1)
+            bumpBy = a!n
+        in sumBump3 ns (a // [(n, previousPop + bumpBy)])
+      -- accumArray addIncrToArray 0 (firstYear, lastYear) incrs (Old version)
+      populationArray = sumBump2 (firstYear, lastYear) bumpArray
+  in populationArray
 
--- array :: Ix i => (i, i) -> [(i, e)] -> Array i e
 -- concatMap :: Foldable t => (a -> [b]) -> t a -> [b]
 
--- Determine min and max years
+-- Determine min and max year
 -- This might not be necessary if we used a Map to store the birth / death counts
 -- We will try that later.
 maximum' :: (Int, Int) -> Int -> Int -> Array Int Int -> Int
@@ -76,13 +114,16 @@ person1 :: BirthDeathYears = BirthDeathYears { birthYear = 1976, deathYear = 201
 person2 :: BirthDeathYears = BirthDeathYears { birthYear = 1977, deathYear = 2011 }
 person3 :: BirthDeathYears = BirthDeathYears { birthYear = 1978, deathYear = 2014 }
 person4 :: BirthDeathYears = BirthDeathYears { birthYear = 1979, deathYear = 1980 }
+person5 :: BirthDeathYears = BirthDeathYears { birthYear = 1976, deathYear = 2012 }
+person6 :: BirthDeathYears = BirthDeathYears { birthYear = 1976, deathYear = 1982 }
+person7 :: BirthDeathYears = BirthDeathYears { birthYear = 1976, deathYear = 1980 }
 
-test1 :: [BirthDeathYears] = [person1, person2, person3, person4 ]
+test1 :: [BirthDeathYears] = [person1, person2, person3, person4, person5]
+test2 :: [BirthDeathYears] = [person6, person7]
 
 main :: IO ()
 main = do
-    putStrLn $ "minBirthYear test1 = " ++ show (minBirthYear test1)
-    putStrLn $ "maxDeathYear test1 = " ++ show (maxDeathYear test1)
     putStrLn $ "histogram test1 = " ++ show (histogram test1)
+    putStrLn $ "histogram test2 = " ++ show (histogram test2)
 
 m :: IO () = main
