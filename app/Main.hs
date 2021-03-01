@@ -62,12 +62,12 @@ histogram bdyears =
       -- Initial Array, all populations are zero.
       -- array :: Ix i => (i, i) -> [(i, e)] -> Array i e
       zeroArray = array (firstYear, lastYear) [(i,0) | i <- years]
-      accumBump :: Incr -> Array Int Int -> Array Int Int
-      accumBump (year, bump) hist = hist // [(year, bump (hist!year))]
+      accumBump :: Array Int Int -> Incr -> Array Int Int
+      accumBump hist (year, bump) = hist // [(year, bump (hist!year))]
       -- foldr :: Foldable t => (a -> b -> b) -> b -> t a -> b
       -- foldl :: (b -> a -> b) -> b -> t a -> b
       -- Get the array of bumps
-      bumpArray = foldr accumBump zeroArray incrs
+      bumpArray = foldl accumBump zeroArray incrs
       -- Now sum the bumps
       sumBumpL :: Array Int Int -> Int -> Array Int Int
       sumBumpL hist year | year == firstYear = hist
