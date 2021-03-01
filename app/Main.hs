@@ -72,28 +72,19 @@ histogram bdyears =
       -- Now sum the bumps
       sumBump :: Int -> Array Int Int -> Array Int Int
       sumBump year hist | year == firstYear = hist
-      sumBump year hist =
-        let previousPop = hist!(year - 1)
-            bumpBy = hist!year
-        in hist // [(year, previousPop + bumpBy)]
-      -- populationArray = foldr sumBump bumpArray years
+      sumBump year hist = hist // [(year, hist!(year-1) + hist!year)]
+      populationArray = foldr sumBump bumpArray years
       sumBump2 :: (Int, Int) -> Array Int Int -> Array Int Int
       sumBump2 (firstYear, lastYear) a = sumBump3 [firstYear .. lastYear] a
       sumBump3 :: [Int] -> Array Int Int -> Array Int Int
       sumBump3 [] a = a
       sumBump3 [n] a | n == firstYear = a
-      sumBump3 [n] a | n > firstYear =
-        let previousPop = a!(n-1)
-            bumpBy = a!n
-        in a // [(n, previousPop + bumpBy)]
+      sumBump3 [n] a | n > firstYear = a // [(n, a!(n-1) + a!n)]
       sumBump3 (n:ns) a | n == firstYear = sumBump3 ns a
-      sumBump3 (n:ns) a | n > firstYear =
-        let previousPop = a!(n-1)
-            bumpBy = a!n
-        in sumBump3 ns (a // [(n, previousPop + bumpBy)])
+      sumBump3 (n:ns) a | n > firstYear = sumBump3 ns (a // [(n, a!(n-1) + a!n)])
       -- accumArray addIncrToArray 0 (firstYear, lastYear) incrs (Old version)
-      populationArray = sumBump2 (firstYear, lastYear) bumpArray
-  in populationArray
+      populationArray2 = sumBump2 (firstYear, lastYear) bumpArray
+  in populationArray2
 
 -- concatMap :: Foldable t => (a -> [b]) -> t a -> [b]
 
